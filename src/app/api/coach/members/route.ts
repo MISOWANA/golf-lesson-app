@@ -4,6 +4,7 @@ import { connectDB } from '@/lib/mongodb';
 import { getSessionFromRequest } from '@/lib/auth';
 import CoachMember from '@/models/CoachMember';
 import LessonSession from '@/models/LessonSession';
+import '@/models/User';
 
 export async function GET(req: NextRequest) {
   const session = await getSessionFromRequest(req);

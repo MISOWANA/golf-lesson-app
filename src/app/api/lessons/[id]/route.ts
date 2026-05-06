@@ -3,6 +3,7 @@ import { connectDB } from '@/lib/mongodb';
 import { getSessionFromRequest } from '@/lib/auth';
 import LessonSession from '@/models/LessonSession';
 import Notification from '@/models/Notification';
+import '@/models/User';
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await getSessionFromRequest(req);
