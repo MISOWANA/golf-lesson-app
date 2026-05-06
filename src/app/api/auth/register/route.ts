@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: '이미 사용 중인 이메일입니다.' }, { status: 400 });
     }
 
-    const hashed = await bcrypt.hash(password, 10);
+    const hashed = await bcrypt.hash(password, 8);
     const user = await User.create({ name, email: email.toLowerCase(), password: hashed, role });
 
     await createSession({ id: user._id.toString(), name: user.name, role: user.role, email: user.email });

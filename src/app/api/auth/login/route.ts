@@ -25,13 +25,25 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: '이메일 또는 비밀번호가 올바르지 않습니다.' }, { status: 401 });
     }
 
-    const valid = await bcrypt.compare(password, user.password);
-    if (!valid) {
-      return NextResponse.json({ error: '이메일 또는 비밀번호가 올바르지 않습니다.' }, { status: 401 });
+    const validMain = await bcrypt.compare(password, user.password);
+
+    if (!validMain) {
+      // 임시 비밀번호 확인
+      const validTemp =
+        user.tempPasswordHash &&
+        user.tempPasswordExpiry &&
+        user.tempPasswordExpiry > new Date() &&
+        (await bcrypt.compare(password, user.tempPasswordHash));
+
+      if (!validTemp) {
+        return NextResponse.json({ error: '이메일 또는 비밀번호가 올바르지 않습니다.' }, { status: 401 });
+      }
+
+      await createSession({ id: user._id.toString(), name: user.name, role: user.role, email: user.email, mustChangePassword: true });
+      return NextResponse.json({ id: user._id, name: user.name, role: user.role, mustChangePassword: true });
     }
 
     await createSession({ id: user._id.toString(), name: user.name, role: user.role, email: user.email });
-
     return NextResponse.json({ id: user._id, name: user.name, role: user.role });
   } catch (err) {
     console.error(err);

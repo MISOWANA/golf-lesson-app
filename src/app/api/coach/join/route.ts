@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
   const rel = await CoachMember.findOne({ inviteCode: inviteCode.toUpperCase() });
   if (!rel) return NextResponse.json({ error: '유효하지 않은 초대 코드입니다.' }, { status: 404 });
 
-  if (rel.status === 'active' && rel.memberId.toString() !== rel.coachId.toString()) {
+  if (rel.status === 'active') {
     return NextResponse.json({ error: '이미 사용된 초대 코드입니다.' }, { status: 400 });
   }
 

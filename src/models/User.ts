@@ -8,6 +8,8 @@ export interface IUser extends Document {
   phone?: string;
   profileImageUrl?: string;
   createdAt: Date;
+  tempPasswordHash?: string;
+  tempPasswordExpiry?: Date;
 }
 
 const UserSchema = new Schema<IUser>({
@@ -18,6 +20,8 @@ const UserSchema = new Schema<IUser>({
   phone: String,
   profileImageUrl: String,
   createdAt: { type: Date, default: Date.now },
+  tempPasswordHash: String,
+  tempPasswordExpiry: Date,
 });
 
 export default mongoose.models.User || mongoose.model<IUser>('User', UserSchema);

@@ -12,7 +12,7 @@ export interface ICoachMember extends Document {
 
 const CoachMemberSchema = new Schema<ICoachMember>({
   coachId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-  memberId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  memberId: { type: Schema.Types.ObjectId, ref: 'User', required: false },
   inviteCode: { type: String, required: true, unique: true },
   totalLessons: { type: Number, default: 0 },
   remainingLessons: { type: Number, default: 0 },

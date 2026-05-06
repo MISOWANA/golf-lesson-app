@@ -10,6 +10,7 @@ export type SessionUser = {
   name: string;
   role: 'coach' | 'member';
   email: string;
+  mustChangePassword?: boolean;
 };
 
 export async function createSession(user: SessionUser) {

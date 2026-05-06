@@ -25,7 +25,6 @@ export async function POST(req: NextRequest) {
 
   const rel = await CoachMember.create({
     coachId: session.id,
-    memberId: session.id,
     inviteCode: code,
     status: 'inactive',
   });
