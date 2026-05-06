@@ -1,7 +1,8 @@
 import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
 
-const SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'golf-coach-pro-secret-key-change-in-production');
+if (!process.env.JWT_SECRET) throw new Error('JWT_SECRET 환경변수를 설정해주세요.');
+const SECRET = new TextEncoder().encode(process.env.JWT_SECRET);
 const COOKIE_NAME = 'gcp_session';
 
 export type SessionUser = {

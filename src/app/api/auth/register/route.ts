@@ -2,10 +2,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { connectDB } from '@/lib/mongodb';
 import { createSession } from '@/lib/auth';
+import { rateLimit } from '@/lib/rateLimit';
 import User from '@/models/User';
 
 export async function POST(req: NextRequest) {
   try {
+    const ip = req.headers.get('x-forwarded-for') ?? 'unknown';
+    if (!rateLimit(`register:${ip}`, 5, 60 * 60 * 1000)) {
+      return NextResponse.json({ error: '잠시 후 다시 시도해주세요.' }, { status: 429 });
+    }
+
     const { name, email, password, role } = await req.json();
 
     if (!name || !email || !password || !role) {

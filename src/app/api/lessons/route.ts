@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongodb';
 import { getSessionFromRequest } from '@/lib/auth';
 import LessonSession from '@/models/LessonSession';
-import Notification from '@/models/Notification';
+import CoachMember from '@/models/CoachMember';
 
 export async function GET(req: NextRequest) {
   const session = await getSessionFromRequest(req);
@@ -17,7 +17,11 @@ export async function GET(req: NextRequest) {
 
   if (session.role === 'coach') {
     query.coachId = session.id;
-    if (memberId) query.memberId = memberId;
+    if (memberId) {
+      const rel = await CoachMember.findOne({ coachId: session.id, memberId, status: 'active' });
+      if (!rel) return NextResponse.json({ error: '접근 권한이 없습니다.' }, { status: 403 });
+      query.memberId = memberId;
+    }
   } else {
     query.memberId = session.id;
     query.isShared = true;
@@ -43,6 +47,11 @@ export async function POST(req: NextRequest) {
   const body = await req.json();
   const { memberId, location, lessonDate } = body;
 
+  if (!memberId) return NextResponse.json({ error: '회원 정보가 필요합니다.' }, { status: 400 });
+
+  const rel = await CoachMember.findOne({ coachId: session.id, memberId, status: 'active' });
+  if (!rel) return NextResponse.json({ error: '소속 회원이 아닙니다.' }, { status: 403 });
+
   const count = await LessonSession.countDocuments({ coachId: session.id, memberId });
   const sessionNumber = count + 1;
 
@@ -50,7 +59,7 @@ export async function POST(req: NextRequest) {
     coachId: session.id,
     memberId,
     sessionNumber,
-    location: location || '',
+    location: location ? String(location).slice(0, 200) : '',
     lessonDate: lessonDate ? new Date(lessonDate) : new Date(),
   });
 

@@ -26,6 +26,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     return NextResponse.json({ error: '접근 권한이 없습니다.' }, { status: 403 });
   }
 
+  if (session.role === 'member' && !(lessonAny as any).isShared) {
+    return NextResponse.json({ error: '접근 권한이 없습니다.' }, { status: 403 });
+  }
+
   return NextResponse.json(lesson);
 }
 

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import mongoose from 'mongoose';
 import { connectDB } from '@/lib/mongodb';
 import { getSessionFromRequest } from '@/lib/auth';
 import CoachMember from '@/models/CoachMember';
@@ -16,27 +17,27 @@ export async function GET(req: NextRequest) {
     .populate('memberId', 'name email')
     .lean();
 
-  const members = await Promise.all(
-    relations.map(async (rel) => {
-      const member = rel.memberId as any;
-      const lastLesson = await LessonSession.findOne(
-        { coachId: session.id, memberId: member._id },
-        { lessonDate: 1, sessionNumber: 1 }
-      )
-        .sort({ lessonDate: -1 })
-        .lean();
+  const lastLessons = await LessonSession.aggregate([
+    { $match: { coachId: new mongoose.Types.ObjectId(session.id) } },
+    { $sort: { lessonDate: -1 } },
+    { $group: { _id: '$memberId', lessonDate: { $first: '$lessonDate' }, sessionNumber: { $first: '$sessionNumber' } } },
+  ]);
 
-      return {
-        relationId: rel._id,
-        memberId: member._id,
-        name: member.name,
-        email: member.email,
-        totalLessons: rel.totalLessons,
-        remainingLessons: rel.remainingLessons,
-        lastLesson: lastLesson ? { date: lastLesson.lessonDate, sessionNumber: lastLesson.sessionNumber } : null,
-      };
-    })
-  );
+  const lastLessonMap = new Map(lastLessons.map((l) => [l._id.toString(), l]));
+
+  const members = relations.map((rel) => {
+    const member = rel.memberId as any;
+    const last = lastLessonMap.get(member._id.toString());
+    return {
+      relationId: rel._id,
+      memberId: member._id,
+      name: member.name,
+      email: member.email,
+      totalLessons: rel.totalLessons,
+      remainingLessons: rel.remainingLessons,
+      lastLesson: last ? { date: last.lessonDate, sessionNumber: last.sessionNumber } : null,
+    };
+  });
 
   return NextResponse.json(members);
 }
