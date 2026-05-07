@@ -7,6 +7,8 @@ import { Textarea } from '@/components/ui/Input';
 import { ScoreBar } from '@/components/ui/ScoreBar';
 import { Card } from '@/components/ui/Card';
 
+interface Mission { id: string; text: string; isCompleted: boolean; }
+
 interface Lesson {
   _id: string;
   sessionNumber: number;
@@ -17,7 +19,7 @@ interface Lesson {
   improvements: string;
   coachComment: string;
   scores: { driver: number; iron: number; approach: number; putting: number };
-  missions: { id: string; text: string; isCompleted: boolean }[];
+  missions: Mission[];
   memberNote: string;
   memberId: { _id: string; name: string };
 }
@@ -35,24 +37,27 @@ export default function LessonDetail() {
   const router = useRouter();
 
   const [lesson, setLesson] = useState<Lesson | null>(null);
-  const [editMode, setEditMode] = useState(false);
+  const [editMode, setEditMode] = useState(false);       // 피드백 전체 편집 모드
+  const [missionEditMode, setMissionEditMode] = useState(false); // 미션만 편집 모드
 
-  // 편집 중 상태
+  // 피드백 편집 상태
   const [tab, setTab] = useState<'good' | 'improve' | 'comment'>('good');
   const [goodPoints, setGoodPoints] = useState('');
   const [improvements, setImprovements] = useState('');
   const [coachComment, setCoachComment] = useState('');
   const [scores, setScores] = useState({ driver: 7, iron: 7, approach: 7, putting: 7 });
-  const [missions, setMissions] = useState<{ id: string; text: string; isCompleted: boolean }[]>([]);
+
+  // 미션 편집 상태 (피드백 편집 모드 & 독립 미션 편집 모드 공용)
+  const [missions, setMissions] = useState<Mission[]>([]);
 
   const [saving, setSaving] = useState(false);
   const [sharing, setSharing] = useState(false);
+  const [savingMissions, setSavingMissions] = useState(false);
 
   useEffect(() => {
     fetch(`/api/lessons/${id}`).then(r => r.json()).then((data: Lesson) => {
       setLesson(data);
       syncFields(data);
-      // 미공유 레슨은 바로 편집 모드
       if (!data.isShared) setEditMode(true);
     });
   }, [id]);
@@ -70,6 +75,23 @@ export default function LessonDetail() {
     setEditMode(false);
   }
 
+  function cancelMissionEdit() {
+    if (lesson) setMissions(lesson.missions || []);
+    setMissionEditMode(false);
+  }
+
+  // 미션 조작 헬퍼
+  function addMission() {
+    setMissions(prev => [...prev, { id: `m_${Date.now()}`, text: '', isCompleted: false }]);
+  }
+  function updateMission(i: number, text: string) {
+    setMissions(prev => prev.map((m, idx) => idx === i ? { ...m, text } : m));
+  }
+  function removeMission(i: number) {
+    setMissions(prev => prev.filter((_, idx) => idx !== i));
+  }
+
+  // 전체 피드백 저장 (미션 포함)
   async function save(share: boolean) {
     const fn = share ? setSharing : setSaving;
     fn(true);
@@ -86,14 +108,20 @@ export default function LessonDetail() {
     if (share) router.push(`/coach/members/${lesson?.memberId?._id}`);
   }
 
-  function addMission() {
-    setMissions(prev => [...prev, { id: `m_${Date.now()}`, text: '', isCompleted: false }]);
-  }
-  function updateMission(i: number, text: string) {
-    setMissions(prev => prev.map((m, idx) => idx === i ? { ...m, text } : m));
-  }
-  function removeMission(i: number) {
-    setMissions(prev => prev.filter((_, idx) => idx !== i));
+  // 미션만 저장
+  async function saveMissions() {
+    setSavingMissions(true);
+    const res = await fetch(`/api/lessons/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ missions }),
+    });
+    setSavingMissions(false);
+    if (!res.ok) return;
+    const updated = await res.json();
+    setLesson(updated);
+    setMissions(updated.missions || []);
+    setMissionEditMode(false);
   }
 
   if (!lesson) {
@@ -109,6 +137,9 @@ export default function LessonDetail() {
     { key: 'improve', label: '🔧 고칠 점' },
     { key: 'comment', label: '💬 코멘트' },
   ] as const;
+
+  // 미션 UI: 편집 모드(전체 or 독립)일 때 공용
+  const showMissionEditor = editMode || missionEditMode;
 
   return (
     <div className="min-h-screen px-4 py-6">
@@ -131,73 +162,54 @@ export default function LessonDetail() {
             </p>
           </div>
         </div>
-
-        {/* 공유된 레슨: 수정 버튼 */}
-        {lesson.isShared && !editMode && (
-          <Button size="sm" variant="secondary" onClick={() => setEditMode(true)}>
-            수정
-          </Button>
+        {/* 공유된 레슨 수정 버튼 */}
+        {lesson.isShared && !editMode && !missionEditMode && (
+          <Button size="sm" variant="secondary" onClick={() => setEditMode(true)}>수정</Button>
         )}
       </div>
 
       <div className="space-y-4">
-        {/* ── 읽기 모드 ── */}
+
+        {/* ── 읽기 모드: 피드백 ── */}
         {!editMode && (
-          <>
-            <Card>
-              <div className="space-y-4">
-                {lesson.goodPoints && (
-                  <div>
-                    <p className="mb-1 text-xs font-semibold text-green-600">✅ 잘된 점</p>
-                    <p className="text-sm text-gray-700 whitespace-pre-wrap">{lesson.goodPoints}</p>
-                  </div>
-                )}
-                {lesson.improvements && (
-                  <div className={lesson.goodPoints ? 'border-t border-gray-100 pt-4' : ''}>
-                    <p className="mb-1 text-xs font-semibold text-orange-500">🔧 고칠 점</p>
-                    <p className="text-sm text-gray-700 whitespace-pre-wrap">{lesson.improvements}</p>
-                  </div>
-                )}
-                {lesson.coachComment && (
-                  <div className={(lesson.goodPoints || lesson.improvements) ? 'border-t border-gray-100 pt-4' : ''}>
-                    <p className="mb-1 text-xs font-semibold text-gray-500">💬 코멘트</p>
-                    <p className="text-sm text-gray-700 whitespace-pre-wrap">{lesson.coachComment}</p>
-                  </div>
-                )}
-                {!lesson.goodPoints && !lesson.improvements && !lesson.coachComment && (
-                  <p className="text-sm text-gray-400">작성된 피드백이 없습니다.</p>
-                )}
-              </div>
-            </Card>
-
-            <Card>
-              <h2 className="mb-3 font-semibold">항목별 평가</h2>
-              {(['driver', 'iron', 'approach', 'putting'] as const).map((k) => (
-                <ScoreBar key={k} label={SCORE_LABELS[k]} value={lesson.scores[k]} readOnly />
-              ))}
-            </Card>
-
-            {lesson.missions.length > 0 && (
-              <Card>
-                <h2 className="mb-3 font-semibold">이번 주 연습 방향</h2>
-                <div className="space-y-2">
-                  {lesson.missions.map((m) => (
-                    <div key={m.id} className="flex items-start gap-3">
-                      <span className={`mt-0.5 text-lg ${m.isCompleted ? 'opacity-50' : ''}`}>
-                        {m.isCompleted ? '✅' : '🎯'}
-                      </span>
-                      <p className={`text-sm ${m.isCompleted ? 'text-gray-400 line-through' : 'text-gray-700'}`}>
-                        {m.text}
-                      </p>
-                    </div>
-                  ))}
+          <Card>
+            <div className="space-y-4">
+              {lesson.goodPoints && (
+                <div>
+                  <p className="mb-1 text-xs font-semibold text-green-600">✅ 잘된 점</p>
+                  <p className="text-sm text-gray-700 whitespace-pre-wrap">{lesson.goodPoints}</p>
                 </div>
-              </Card>
-            )}
-          </>
+              )}
+              {lesson.improvements && (
+                <div className={lesson.goodPoints ? 'border-t border-gray-100 pt-4' : ''}>
+                  <p className="mb-1 text-xs font-semibold text-orange-500">🔧 고칠 점</p>
+                  <p className="text-sm text-gray-700 whitespace-pre-wrap">{lesson.improvements}</p>
+                </div>
+              )}
+              {lesson.coachComment && (
+                <div className={(lesson.goodPoints || lesson.improvements) ? 'border-t border-gray-100 pt-4' : ''}>
+                  <p className="mb-1 text-xs font-semibold text-gray-500">💬 코멘트</p>
+                  <p className="text-sm text-gray-700 whitespace-pre-wrap">{lesson.coachComment}</p>
+                </div>
+              )}
+              {!lesson.goodPoints && !lesson.improvements && !lesson.coachComment && (
+                <p className="text-sm text-gray-400">작성된 피드백이 없습니다.</p>
+              )}
+            </div>
+          </Card>
         )}
 
-        {/* ── 편집 모드 ── */}
+        {/* ── 읽기 모드: 점수 ── */}
+        {!editMode && (
+          <Card>
+            <h2 className="mb-3 font-semibold">항목별 평가</h2>
+            {(['driver', 'iron', 'approach', 'putting'] as const).map((k) => (
+              <ScoreBar key={k} label={SCORE_LABELS[k]} value={lesson.scores[k]} readOnly />
+            ))}
+          </Card>
+        )}
+
+        {/* ── 편집 모드: 피드백 + 점수 ── */}
         {editMode && (
           <>
             <Card>
@@ -242,16 +254,58 @@ export default function LessonDetail() {
                 />
               ))}
             </Card>
+          </>
+        )}
 
-            <Card>
-              <div className="mb-3 flex items-center justify-between">
-                <h2 className="font-semibold">이번 주 연습 방향</h2>
-                <button onClick={addMission} className="text-sm font-medium text-green-700">+ 추가</button>
+        {/* ── 이번 주 연습 방향 (항상 표시, 편집 모드 독립) ── */}
+        <Card>
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="font-semibold">이번 주 연습 방향</h2>
+            {!showMissionEditor && (
+              <button
+                onClick={() => setMissionEditMode(true)}
+                className="text-sm font-medium text-green-600"
+              >
+                {missions.length > 0 ? '수정' : '+ 추가'}
+              </button>
+            )}
+            {showMissionEditor && !editMode && (
+              <button
+                onClick={addMission}
+                className="text-sm font-medium text-green-600"
+              >
+                + 추가
+              </button>
+            )}
+          </div>
+
+          {/* 읽기 모드 */}
+          {!showMissionEditor && (
+            missions.length === 0 ? (
+              <p className="text-sm text-gray-400">등록된 연습 방향이 없습니다.</p>
+            ) : (
+              <div className="space-y-2">
+                {missions.map((m) => (
+                  <div key={m.id} className="flex items-start gap-3">
+                    <span className={`mt-0.5 text-lg shrink-0 ${m.isCompleted ? 'opacity-50' : ''}`}>
+                      {m.isCompleted ? '✅' : '🎯'}
+                    </span>
+                    <p className={`text-sm ${m.isCompleted ? 'text-gray-400 line-through' : 'text-gray-700'}`}>
+                      {m.text}
+                    </p>
+                  </div>
+                ))}
               </div>
+            )
+          )}
+
+          {/* 편집 모드 */}
+          {showMissionEditor && (
+            <>
               <div className="space-y-2">
                 {missions.map((m, i) => (
                   <div key={m.id} className="flex items-center gap-2">
-                    <span className="text-sm text-gray-400">{i + 1}.</span>
+                    <span className="text-sm text-gray-400 shrink-0">{i + 1}.</span>
                     <input
                       type="text"
                       value={m.text}
@@ -259,41 +313,46 @@ export default function LessonDetail() {
                       placeholder={`미션 ${i + 1}`}
                       className="flex-1 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:border-green-600 focus:bg-white"
                     />
-                    <button onClick={() => removeMission(i)} className="text-gray-300 hover:text-red-400">✕</button>
+                    <button
+                      onClick={() => removeMission(i)}
+                      className="shrink-0 text-gray-300 hover:text-red-400 text-lg leading-none"
+                    >
+                      ✕
+                    </button>
                   </div>
                 ))}
                 {missions.length === 0 && (
-                  <p className="text-sm text-gray-400">미션을 추가해보세요.</p>
+                  <p className="text-sm text-gray-400">+ 추가 버튼으로 미션을 등록하세요.</p>
                 )}
               </div>
-            </Card>
 
-            {/* 버튼 영역 */}
-            {lesson.isShared ? (
-              // 공유된 레슨: 저장 + 취소
-              <div className="flex gap-3 pb-8">
-                <Button variant="secondary" onClick={cancelEdit} className="flex-1">
-                  취소
-                </Button>
-                <Button onClick={() => save(true)} loading={saving} className="flex-1">
-                  저장
-                </Button>
-              </div>
-            ) : (
-              // 미공유 레슨: 임시 저장 + 공유
-              <div className="flex gap-3 pb-8">
-                <Button variant="secondary" onClick={() => save(false)} loading={saving} className="flex-1">
-                  임시 저장
-                </Button>
-                <Button onClick={() => save(true)} loading={sharing} className="flex-1">
-                  저장 및 공유 🚀
-                </Button>
-              </div>
-            )}
-          </>
+              {/* 독립 미션 편집일 때만 저장/취소 버튼 */}
+              {missionEditMode && !editMode && (
+                <div className="mt-4 flex gap-2">
+                  <Button size="sm" variant="secondary" onClick={cancelMissionEdit} className="flex-1">취소</Button>
+                  <Button size="sm" onClick={saveMissions} loading={savingMissions} className="flex-1">저장</Button>
+                </div>
+              )}
+            </>
+          )}
+        </Card>
+
+        {/* ── 피드백 편집 모드 버튼 ── */}
+        {editMode && (
+          lesson.isShared ? (
+            <div className="flex gap-3 pb-8">
+              <Button variant="secondary" onClick={cancelEdit} className="flex-1">취소</Button>
+              <Button onClick={() => save(true)} loading={saving} className="flex-1">저장</Button>
+            </div>
+          ) : (
+            <div className="flex gap-3 pb-8">
+              <Button variant="secondary" onClick={() => save(false)} loading={saving} className="flex-1">임시 저장</Button>
+              <Button onClick={() => save(true)} loading={sharing} className="flex-1">저장 및 공유 🚀</Button>
+            </div>
+          )
         )}
 
-        {/* 회원 메모 (공통) */}
+        {/* 회원 메모 */}
         {lesson.memberNote && (
           <Card className="border-l-4 border-blue-300">
             <p className="mb-1 text-xs font-medium text-blue-500">회원 메모</p>
