@@ -7,6 +7,8 @@
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Noto Sans KR', sans-serif;
   overscroll-behavior: none;
+  background-color: #111111;
+  color: #FFFFFF;
 }
 
 .pb-safe {
@@ -19,4 +21,9 @@ body {
 
 input, textarea, select {
   font-size: 16px;
+  color-scheme: dark;
 }
+
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: #1C1C1E; }
+::-webkit-scrollbar-thumb { background: #2C2C2E; border-radius: 2px; }

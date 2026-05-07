@@ -30,12 +30,12 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
 
     return (
       <div className="w-full">
-        {label && <label className="mb-1.5 block text-sm font-medium text-gray-700">{label}</label>}
+        {label && <label className="mb-1.5 block text-sm font-medium text-[#AEAEB2]">{label}</label>}
         <div className="relative">
           <input
             ref={ref}
             type={inputType}
-            className={`w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none transition focus:border-green-600 focus:bg-white focus:ring-2 focus:ring-green-100 ${isPassword ? 'pr-11' : ''} ${error ? 'border-red-400' : ''} ${className}`}
+            className={`w-full rounded-xl border border-[#2C2C2E] bg-[#252525] text-white px-4 py-3 text-sm outline-none transition placeholder:text-[#636366] focus:border-[#D4AF37] focus:bg-[#2A2A2A] focus:ring-2 focus:ring-[#D4AF37]/20 ${isPassword ? 'pr-11' : ''} ${error ? 'border-red-500' : ''} ${className}`}
             {...props}
           />
           {isPassword && (
@@ -43,14 +43,14 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
               type="button"
               tabIndex={-1}
               onClick={() => setShowPassword((v) => !v)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#636366] hover:text-[#AEAEB2]"
               aria-label={showPassword ? '비밀번호 숨기기' : '비밀번호 보기'}
             >
               <EyeIcon open={showPassword} />
             </button>
           )}
         </div>
-        {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
+        {error && <p className="mt-1 text-xs text-red-400">{error}</p>}
       </div>
     );
   }
@@ -65,13 +65,13 @@ interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
   ({ label, error, className = '', ...props }, ref) => (
     <div className="w-full">
-      {label && <label className="mb-1.5 block text-sm font-medium text-gray-700">{label}</label>}
+      {label && <label className="mb-1.5 block text-sm font-medium text-[#AEAEB2]">{label}</label>}
       <textarea
         ref={ref}
-        className={`w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none transition focus:border-green-600 focus:bg-white focus:ring-2 focus:ring-green-100 ${error ? 'border-red-400' : ''} ${className}`}
+        className={`w-full rounded-xl border border-[#2C2C2E] bg-[#252525] text-white px-4 py-3 text-sm outline-none transition placeholder:text-[#636366] focus:border-[#D4AF37] focus:bg-[#2A2A2A] focus:ring-2 focus:ring-[#D4AF37]/20 ${error ? 'border-red-500' : ''} ${className}`}
         {...props}
       />
-      {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
+      {error && <p className="mt-1 text-xs text-red-400">{error}</p>}
     </div>
   )
 );

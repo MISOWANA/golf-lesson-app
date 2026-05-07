@@ -67,26 +67,34 @@ export default function MemberHome() {
     <div className="px-4 py-6">
       <div className="mb-6 flex items-start justify-between">
         <div>
-          <h1 className="text-xl font-bold">안녕하세요, {userName || '회원'}님 👋</h1>
-          <p className="text-sm text-gray-500">
-            {coach ? `코치: ${coach.name}` : '코치와 연결해보세요'}
-          </p>
+          <p className="text-sm text-[#636366]">안녕하세요</p>
+          <h1 className="text-xl font-bold">{userName || '회원'}님 👋</h1>
+          {coach && <p className="text-xs text-[#636366] mt-0.5">코치: {coach.name}</p>}
         </div>
         {!coach && (
           <Button size="sm" onClick={() => setShowJoin(true)}>코치 연결</Button>
         )}
       </div>
 
+      {!coach && !showJoin && (
+        <Card className="mb-6 border border-[#2C2C2E]">
+          <p className="text-sm text-[#AEAEB2]">아직 코치와 연결되지 않았습니다.</p>
+          <button onClick={() => setShowJoin(true)} className="mt-2 text-sm font-medium text-[#D4AF37]">
+            초대 코드 입력하기 →
+          </button>
+        </Card>
+      )}
+
       {showJoin && (
-        <Card className="mb-6 border-2 border-green-200 bg-green-50">
-          <p className="mb-3 text-sm font-medium text-green-800">코치에게 받은 초대 코드를 입력하세요</p>
+        <Card className="mb-6 border border-[#D4AF37]/40 bg-[#D4AF37]/10">
+          <p className="mb-3 text-sm font-medium text-white">코치에게 받은 초대 코드를 입력하세요</p>
           <Input
             placeholder="예: A3B2C1D4"
             value={code}
             onChange={e => setCode(e.target.value.toUpperCase())}
             className="mb-3"
           />
-          {joinError && <p className="mb-2 text-xs text-red-500">{joinError}</p>}
+          {joinError && <p className="mb-2 text-xs text-red-400">{joinError}</p>}
           <div className="flex gap-2">
             <Button onClick={joinCoach} loading={joining} size="sm" className="flex-1">연결하기</Button>
             <Button variant="ghost" size="sm" onClick={() => setShowJoin(false)}>취소</Button>
@@ -94,17 +102,17 @@ export default function MemberHome() {
         </Card>
       )}
 
-      <h2 className="mb-3 font-semibold">레슨 기록</h2>
+      <h2 className="mb-3 font-semibold text-white">레슨 기록</h2>
 
       {loading ? (
         <div className="space-y-3">
-          {[1, 2, 3].map(i => <div key={i} className="h-28 animate-pulse rounded-2xl bg-gray-200" />)}
+          {[1, 2, 3].map(i => <div key={i} className="h-28 animate-pulse rounded-2xl bg-[#2A2A2A]" />)}
         </div>
       ) : lessons.length === 0 ? (
         <div className="py-16 text-center">
           <p className="text-4xl">📋</p>
-          <p className="mt-3 font-medium text-gray-500">아직 레슨 기록이 없습니다</p>
-          {!coach && <p className="mt-1 text-sm text-gray-400">코치와 연결하면 레슨 기록을 확인할 수 있어요</p>}
+          <p className="mt-3 font-medium text-[#AEAEB2]">아직 레슨 기록이 없습니다</p>
+          {!coach && <p className="mt-1 text-sm text-[#636366]">코치와 연결하면 레슨 기록을 확인할 수 있어요</p>}
         </div>
       ) : (
         <div className="space-y-3">
@@ -114,18 +122,18 @@ export default function MemberHome() {
                 <div className="flex items-start justify-between">
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-semibold text-green-700">
+                      <span className="rounded-full bg-[#D4AF37]/15 px-2.5 py-0.5 text-xs font-semibold text-[#D4AF37]">
                         {l.sessionNumber}회차
                       </span>
-                      <span className="text-xs text-gray-400">{fmtDate(l.lessonDate)}</span>
+                      <span className="text-xs text-[#636366]">{fmtDate(l.lessonDate)}</span>
                     </div>
-                    <p className="mt-1 text-xs text-gray-400">
+                    <p className="mt-1 text-xs text-[#636366]">
                       {l.location || '장소 미입력'} · 코치: {(l.coachId as any)?.name}
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-xl font-bold text-green-700">{avg(l.scores)}</p>
-                    <p className="text-xs text-gray-400">종합</p>
+                    <p className="text-xl font-bold text-[#D4AF37]">{avg(l.scores)}</p>
+                    <p className="text-xs text-[#636366]">종합</p>
                   </div>
                 </div>
 
@@ -136,15 +144,15 @@ export default function MemberHome() {
                     { label: '어프로치', val: l.scores.approach },
                     { label: '퍼팅', val: l.scores.putting },
                   ].map(({ label, val }) => (
-                    <div key={label} className="rounded-lg bg-gray-50 py-1.5">
-                      <p className="text-xs font-bold text-green-600">{val}</p>
-                      <p className="text-[10px] text-gray-400">{label}</p>
+                    <div key={label} className="rounded-lg bg-[#252525] py-1.5">
+                      <p className="text-xs font-bold text-[#D4AF37]">{val}</p>
+                      <p className="text-[10px] text-[#636366]">{label}</p>
                     </div>
                   ))}
                 </div>
 
                 {l.goodPoints && (
-                  <p className="mt-2 line-clamp-1 text-xs text-gray-500">✅ {l.goodPoints}</p>
+                  <p className="mt-2 line-clamp-1 text-xs text-[#AEAEB2]">✅ {l.goodPoints}</p>
                 )}
               </Card>
             </Link>

@@ -34,23 +34,23 @@ export default function CoachNotifications() {
 
       {loading ? (
         <div className="space-y-3">
-          {[1, 2].map(i => <div key={i} className="h-16 animate-pulse rounded-2xl bg-gray-200" />)}
+          {[1, 2].map(i => <div key={i} className="h-16 animate-pulse rounded-2xl bg-[#2A2A2A]" />)}
         </div>
       ) : notifs.length === 0 ? (
         <div className="py-16 text-center">
           <p className="text-4xl">🔔</p>
-          <p className="mt-3 text-gray-500">알림이 없습니다</p>
+          <p className="mt-3 text-[#AEAEB2]">알림이 없습니다</p>
         </div>
       ) : (
         <div className="space-y-2">
           {notifs.map(n => (
-            <Card key={n._id} className={`${!n.isRead ? 'border-l-4 border-green-500' : ''}`}>
+            <Card key={n._id} className={`${!n.isRead ? 'border-l-4 border-[#D4AF37]' : ''}`}>
               <div className="flex items-start justify-between gap-2">
                 <div>
-                  <p className="font-medium text-sm">{n.title}</p>
-                  <p className="text-xs text-gray-500 mt-0.5">{n.body}</p>
+                  <p className="font-medium text-sm text-white">{n.title}</p>
+                  <p className="text-xs text-[#AEAEB2] mt-0.5">{n.body}</p>
                 </div>
-                <span className="shrink-0 text-xs text-gray-400">{fmtDate(n.createdAt)}</span>
+                <span className="shrink-0 text-xs text-[#636366]">{fmtDate(n.createdAt)}</span>
               </div>
             </Card>
           ))}

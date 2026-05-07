@@ -40,10 +40,12 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center px-6">
       <div className="w-full max-w-sm">
-        <div className="mb-10 text-center">
-          <div className="mb-3 text-5xl">⛳</div>
-          <h1 className="text-2xl font-bold text-green-800">GolfCoach Pro</h1>
-          <p className="mt-1 text-sm text-gray-500">골프 레슨 기록 플랫폼</p>
+        <div className="mb-12 text-center">
+          <div className="mb-5 flex items-center justify-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#D4AF37] text-black font-bold text-xl">G</div>
+            <h1 className="text-2xl font-bold tracking-tight">GolfCoach Pro</h1>
+          </div>
+          <p className="text-sm text-[#636366]">골프 레슨 기록 플랫폼</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -67,22 +69,22 @@ export default function LoginPage() {
           />
 
           {error && (
-            <div className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">{error}</div>
+            <div className="rounded-xl bg-red-900/20 border border-red-800/40 px-4 py-3 text-sm text-red-400">{error}</div>
           )}
 
-          <Button type="submit" size="lg" loading={loading} className="w-full">
+          <Button type="submit" size="lg" loading={loading} className="w-full mt-2">
             로그인
           </Button>
         </form>
 
-        <p className="mt-4 text-center text-sm text-gray-500">
-          <Link href="/forgot-password" className="font-semibold text-green-700 underline-offset-2 hover:underline">
+        <p className="mt-5 text-center text-sm text-[#636366]">
+          <Link href="/forgot-password" className="font-semibold text-[#D4AF37] underline-offset-2 hover:underline">
             비밀번호를 잊으셨나요?
           </Link>
         </p>
-        <p className="mt-3 text-center text-sm text-gray-500">
+        <p className="mt-3 text-center text-sm text-[#636366]">
           계정이 없으신가요?{' '}
-          <Link href="/register" className="font-semibold text-green-700 underline-offset-2 hover:underline">
+          <Link href="/register" className="font-semibold text-[#D4AF37] underline-offset-2 hover:underline">
             회원가입
           </Link>
         </p>

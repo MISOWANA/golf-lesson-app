@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
-    statusBarStyle: 'default',
+    statusBarStyle: 'black-translucent',
     title: 'GolfCoach Pro',
   },
 };
@@ -17,7 +17,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: '#1B5E20',
+  themeColor: '#111111',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -26,9 +26,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <link rel="apple-touch-icon" href="/icon-192.png" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
       </head>
-      <body className="bg-[#F9FAF6] text-[#1A2415] antialiased">
+      <body className="bg-[#111111] text-white antialiased">
         {children}
       </body>
     </html>
