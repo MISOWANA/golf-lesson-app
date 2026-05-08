@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 interface NavItem {
   href: string;
@@ -60,10 +61,22 @@ function NavIcon({ href }: { href: string }) {
 
 export function BottomNav({ items }: BottomNavProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const [optimistic, setOptimistic] = useState<string | null>(null);
 
-  const activeHref = items
+  useEffect(() => {
+    items.forEach(item => router.prefetch(item.href));
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    setOptimistic(null);
+  }, [pathname]);
+
+  const resolvedHref = items
     .filter(item => pathname === item.href || pathname.startsWith(item.href + '/'))
     .sort((a, b) => b.href.length - a.href.length)[0]?.href ?? '';
+
+  const activeHref = optimistic ?? resolvedHref;
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 flex border-t border-[#2C2C2E] bg-[#1C1C1E] pb-safe">
@@ -73,6 +86,7 @@ export function BottomNav({ items }: BottomNavProps) {
           <Link
             key={item.href}
             href={item.href}
+            onClick={() => setOptimistic(item.href)}
             className={`flex flex-1 flex-col items-center gap-1 py-3 text-xs transition-colors ${
               active ? 'text-[#D4AF37]' : 'text-[#636366]'
             }`}

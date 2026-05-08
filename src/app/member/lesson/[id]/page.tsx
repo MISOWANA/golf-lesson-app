@@ -130,8 +130,14 @@ export default function MemberLessonDetail() {
                   onClick={() => toggleMission(m.id, m.isCompleted)}
                   className="flex w-full items-start gap-3 text-left"
                 >
-                  <span className="mt-0.5 text-xl shrink-0">
-                    {m.isCompleted ? '✅' : '⬜'}
+                  <span className={`mt-0.5 shrink-0 flex h-5 w-5 items-center justify-center rounded-full border-2 transition-colors ${
+                    m.isCompleted ? 'border-[#D4AF37] bg-[#D4AF37]' : 'border-[#4A4A4A]'
+                  }`}>
+                    {m.isCompleted && (
+                      <svg className="h-3 w-3 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
                   </span>
                   <p className={`text-sm ${m.isCompleted ? 'text-[#636366] line-through' : 'text-[#AEAEB2]'}`}>
                     {m.text}

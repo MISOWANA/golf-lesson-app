@@ -115,9 +115,15 @@ export default function PracticePage() {
                         onClick={() => toggleMission(lesson._id, m.id, m.isCompleted)}
                         className="w-full"
                       >
-                        <Card className={`flex items-start gap-4 text-left transition-all ${m.isCompleted ? 'opacity-50' : ''}`}>
-                          <span className="mt-0.5 text-2xl shrink-0">
-                            {m.isCompleted ? '✅' : '⬜'}
+                        <Card className={`flex items-start gap-4 text-left transition-all ${m.isCompleted ? 'opacity-60' : ''}`}>
+                          <span className={`mt-0.5 shrink-0 flex h-5 w-5 items-center justify-center rounded-full border-2 transition-colors ${
+                            m.isCompleted ? 'border-[#D4AF37] bg-[#D4AF37]' : 'border-[#4A4A4A]'
+                          }`}>
+                            {m.isCompleted && (
+                              <svg className="h-3 w-3 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                              </svg>
+                            )}
                           </span>
                           <p className={`text-sm font-medium ${m.isCompleted ? 'line-through text-[#636366]' : 'text-white'}`}>
                             {m.text}
