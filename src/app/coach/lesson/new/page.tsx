@@ -87,9 +87,9 @@ function NewLessonForm() {
       </div>
 
       <div className="space-y-4">
-        <div className="flex gap-3">
-          <Input label="레슨 날짜" type="datetime-local" value={lessonDate} onChange={e => setLessonDate(e.target.value)} className="flex-1" />
-          <Input label="장소" type="text" placeholder="연습장, 필드..." value={location} onChange={e => setLocation(e.target.value)} className="flex-1" />
+        <div className="flex flex-col gap-3">
+          <Input label="레슨 날짜" type="datetime-local" value={lessonDate} onChange={e => setLessonDate(e.target.value)} />
+          <Input label="장소" type="text" placeholder="연습장, 필드..." value={location} onChange={e => setLocation(e.target.value)} />
         </div>
 
         {/* 집중 영역 */}
