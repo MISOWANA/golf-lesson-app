@@ -80,7 +80,7 @@ function NewLessonForm() {
   }
 
   return (
-    <div className="min-h-screen px-4 py-6">
+    <div className="min-h-screen overflow-x-hidden px-4 py-6">
       <div className="mb-6 flex items-center gap-3">
         <button onClick={() => router.back()} className="text-2xl text-[#AEAEB2]">←</button>
         <h1 className="text-xl font-bold">새 레슨 기록</h1>
@@ -88,7 +88,7 @@ function NewLessonForm() {
 
       <div className="space-y-4">
         <div className="flex flex-col gap-3">
-          <Input label="레슨 날짜" type="datetime-local" value={lessonDate} onChange={e => setLessonDate(e.target.value)} />
+          <Input label="레슨 날짜" type="datetime-local" value={lessonDate} onChange={e => setLessonDate(e.target.value)} style={{ minWidth: 0 }} />
           <Input label="장소" type="text" placeholder="연습장, 필드..." value={location} onChange={e => setLocation(e.target.value)} />
         </div>
 

@@ -29,13 +29,13 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     const inputType = isPassword ? (showPassword ? 'text' : 'password') : type;
 
     return (
-      <div className="w-full">
+      <div className="w-full min-w-0">
         {label && <label className="mb-1.5 block text-sm font-medium text-[#AEAEB2]">{label}</label>}
-        <div className="relative">
+        <div className="relative min-w-0">
           <input
             ref={ref}
             type={inputType}
-            className={`w-full rounded-xl border border-[#2C2C2E] bg-[#252525] text-white px-4 py-3 text-sm outline-none transition placeholder:text-[#636366] focus:border-[#D4AF37] focus:bg-[#2A2A2A] focus:ring-2 focus:ring-[#D4AF37]/20 ${isPassword ? 'pr-11' : ''} ${error ? 'border-red-500' : ''} ${className}`}
+            className={`w-full min-w-0 rounded-xl border border-[#2C2C2E] bg-[#252525] text-white px-4 py-3 text-sm outline-none transition placeholder:text-[#636366] focus:border-[#D4AF37] focus:bg-[#2A2A2A] focus:ring-2 focus:ring-[#D4AF37]/20 ${isPassword ? 'pr-11' : ''} ${error ? 'border-red-500' : ''} ${className}`}
             {...props}
           />
           {isPassword && (
