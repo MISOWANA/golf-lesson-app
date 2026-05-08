@@ -12,7 +12,7 @@ interface Lesson {
   lessonDate: string;
   location: string;
   isShared: boolean;
-  scores: { driver: number; iron: number; approach: number; putting: number };
+  focusAreas: { area: string; note: string }[];
   goodPoints: string;
 }
 
@@ -25,10 +25,6 @@ interface MemberDetail {
   totalLessons: number;
   remainingLessons: number;
   lessons: Lesson[];
-}
-
-function avg(s: Lesson['scores']) {
-  return ((s.driver + s.iron + s.approach + s.putting) / 4).toFixed(1);
 }
 
 function fmtDate(d: string) {
@@ -205,16 +201,21 @@ export default function MemberDetailPage({ params }: { params: Promise<{ id: str
                         <span className="rounded-full bg-[#2A2A2A] px-2 py-0.5 text-xs text-[#636366]">비공개</span>
                       )}
                     </div>
-                    <div className="text-right">
-                      <p className="text-xl font-bold text-[#D4AF37]">{avg(lesson.scores)}</p>
-                      <p className="text-xs text-[#636366]">종합</p>
-                    </div>
                   </div>
                   {lesson.location && (
                     <p className="mt-1.5 text-xs text-[#636366]">📍 {lesson.location}</p>
                   )}
+                  {(lesson.focusAreas ?? []).length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-1">
+                      {(lesson.focusAreas ?? []).map(f => (
+                        <span key={f.area} className="rounded-full bg-[#D4AF37]/15 px-2 py-0.5 text-xs font-medium text-[#D4AF37]">
+                          {f.area}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                   {lesson.goodPoints && (
-                    <p className="mt-1 line-clamp-1 text-xs text-[#AEAEB2]">✅ {lesson.goodPoints}</p>
+                    <p className="mt-1.5 line-clamp-1 text-xs text-[#AEAEB2]">✅ {lesson.goodPoints}</p>
                   )}
                 </Card>
               </Link>

@@ -4,9 +4,11 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { Textarea } from '@/components/ui/Input';
-import { ScoreBar } from '@/components/ui/ScoreBar';
 import { Card } from '@/components/ui/Card';
 
+const PRESET_AREAS = ['드라이버', '아이언', '어프로치', '퍼팅', '자세', '리듬', '코스 전략', '멘탈'];
+
+interface FocusArea { area: string; note: string; }
 interface Mission { id: string; text: string; isCompleted: boolean; }
 
 interface Lesson {
@@ -18,7 +20,7 @@ interface Lesson {
   goodPoints: string;
   improvements: string;
   coachComment: string;
-  scores: { driver: number; iron: number; approach: number; putting: number };
+  focusAreas: FocusArea[];
   missions: Mission[];
   memberNote: string;
   memberId: { _id: string; name: string };
@@ -30,8 +32,6 @@ function fmtDate(d: string) {
   });
 }
 
-const SCORE_LABELS = { driver: '드라이버', iron: '아이언', approach: '어프로치', putting: '퍼팅' } as const;
-
 export default function LessonDetail() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
@@ -40,11 +40,10 @@ export default function LessonDetail() {
   const [editMode, setEditMode] = useState(false);
   const [missionEditMode, setMissionEditMode] = useState(false);
 
-  const [tab, setTab] = useState<'good' | 'improve' | 'comment'>('good');
   const [goodPoints, setGoodPoints] = useState('');
   const [improvements, setImprovements] = useState('');
   const [coachComment, setCoachComment] = useState('');
-  const [scores, setScores] = useState({ driver: 7, iron: 7, approach: 7, putting: 7 });
+  const [focusAreas, setFocusAreas] = useState<FocusArea[]>([]);
   const [missions, setMissions] = useState<Mission[]>([]);
 
   const [saving, setSaving] = useState(false);
@@ -63,12 +62,24 @@ export default function LessonDetail() {
     setGoodPoints(data.goodPoints || '');
     setImprovements(data.improvements || '');
     setCoachComment(data.coachComment || '');
-    setScores(data.scores);
+    setFocusAreas(data.focusAreas || []);
     setMissions(data.missions || []);
   }
 
   function cancelEdit() { if (lesson) syncFields(lesson); setEditMode(false); }
   function cancelMissionEdit() { if (lesson) setMissions(lesson.missions || []); setMissionEditMode(false); }
+
+  function toggleArea(area: string) {
+    setFocusAreas(prev =>
+      prev.some(f => f.area === area)
+        ? prev.filter(f => f.area !== area)
+        : [...prev, { area, note: '' }]
+    );
+  }
+
+  function updateNote(area: string, note: string) {
+    setFocusAreas(prev => prev.map(f => f.area === area ? { ...f, note } : f));
+  }
 
   function addMission() { setMissions(prev => [...prev, { id: `m_${Date.now()}`, text: '', isCompleted: false }]); }
   function updateMission(i: number, text: string) { setMissions(prev => prev.map((m, idx) => idx === i ? { ...m, text } : m)); }
@@ -80,7 +91,7 @@ export default function LessonDetail() {
     const res = await fetch(`/api/lessons/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ goodPoints, improvements, coachComment, scores, missions, isShared: share }),
+      body: JSON.stringify({ goodPoints, improvements, coachComment, focusAreas, missions, isShared: share }),
     });
     fn(false);
     if (!res.ok) return;
@@ -113,12 +124,6 @@ export default function LessonDetail() {
     );
   }
 
-  const tabs = [
-    { key: 'good', label: '✅ 잘된 점' },
-    { key: 'improve', label: '🔧 고칠 점' },
-    { key: 'comment', label: '💬 코멘트' },
-  ] as const;
-
   const showMissionEditor = editMode || missionEditMode;
 
   return (
@@ -148,73 +153,118 @@ export default function LessonDetail() {
 
       <div className="space-y-4">
 
+        {/* 보기 모드 */}
         {!editMode && (
-          <Card>
-            <div className="space-y-4">
-              {lesson.goodPoints && (
-                <div>
-                  <p className="mb-1 text-xs font-semibold text-[#D4AF37]">✅ 잘된 점</p>
-                  <p className="text-sm text-[#AEAEB2] whitespace-pre-wrap">{lesson.goodPoints}</p>
-                </div>
-              )}
-              {lesson.improvements && (
-                <div className={lesson.goodPoints ? 'border-t border-[#2C2C2E] pt-4' : ''}>
-                  <p className="mb-1 text-xs font-semibold text-orange-400">🔧 고칠 점</p>
-                  <p className="text-sm text-[#AEAEB2] whitespace-pre-wrap">{lesson.improvements}</p>
-                </div>
-              )}
-              {lesson.coachComment && (
-                <div className={(lesson.goodPoints || lesson.improvements) ? 'border-t border-[#2C2C2E] pt-4' : ''}>
-                  <p className="mb-1 text-xs font-semibold text-[#636366]">💬 코멘트</p>
-                  <p className="text-sm text-[#AEAEB2] whitespace-pre-wrap">{lesson.coachComment}</p>
-                </div>
-              )}
-              {!lesson.goodPoints && !lesson.improvements && !lesson.coachComment && (
-                <p className="text-sm text-[#636366]">작성된 피드백이 없습니다.</p>
-              )}
-            </div>
-          </Card>
-        )}
-
-        {!editMode && (
-          <Card>
-            <h2 className="mb-3 font-semibold text-white">항목별 평가</h2>
-            {(['driver', 'iron', 'approach', 'putting'] as const).map((k) => (
-              <ScoreBar key={k} label={SCORE_LABELS[k]} value={lesson.scores[k]} readOnly />
-            ))}
-          </Card>
-        )}
-
-        {editMode && (
           <>
+            {/* 집중 영역 */}
             <Card>
-              <div className="mb-4 flex gap-1 rounded-xl bg-[#2A2A2A] p-1">
-                {tabs.map(t => (
-                  <button
-                    key={t.key}
-                    onClick={() => setTab(t.key)}
-                    className={`flex-1 rounded-lg py-2 text-sm font-medium transition-colors ${
-                      tab === t.key ? 'bg-[#D4AF37] text-black' : 'text-[#636366]'
-                    }`}
-                  >
-                    {t.label}
-                  </button>
-                ))}
-              </div>
-              {tab === 'good' && <Textarea rows={5} value={goodPoints} onChange={e => setGoodPoints(e.target.value)} placeholder="이번 레슨에서 잘한 점..." />}
-              {tab === 'improve' && <Textarea rows={5} value={improvements} onChange={e => setImprovements(e.target.value)} placeholder="개선이 필요한 점..." />}
-              {tab === 'comment' && <Textarea rows={5} value={coachComment} onChange={e => setCoachComment(e.target.value)} placeholder="추가 코치 코멘트..." />}
+              <h2 className="mb-3 font-semibold text-white">이번 레슨 집중 영역</h2>
+              {(lesson.focusAreas ?? []).length === 0 ? (
+                <p className="text-sm text-[#636366]">등록된 집중 영역이 없습니다.</p>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {(lesson.focusAreas ?? []).map(f => (
+                    <div key={f.area} className="rounded-xl bg-[#252525] px-3 py-2">
+                      <p className="text-sm font-semibold text-[#D4AF37]">{f.area}</p>
+                      {f.note && <p className="mt-0.5 text-xs text-[#AEAEB2]">{f.note}</p>}
+                    </div>
+                  ))}
+                </div>
+              )}
             </Card>
 
+            {/* 피드백 */}
             <Card>
-              <h2 className="mb-3 font-semibold text-white">항목별 평가</h2>
-              {(['driver', 'iron', 'approach', 'putting'] as const).map((k) => (
-                <ScoreBar key={k} label={SCORE_LABELS[k]} value={scores[k]} onChange={v => setScores({ ...scores, [k]: v })} />
-              ))}
+              <div className="space-y-4">
+                {lesson.goodPoints && (
+                  <div>
+                    <p className="mb-1 text-xs font-semibold text-[#D4AF37]">✅ 잘된 점</p>
+                    <p className="text-sm text-[#AEAEB2] whitespace-pre-wrap">{lesson.goodPoints}</p>
+                  </div>
+                )}
+                {lesson.improvements && (
+                  <div className={lesson.goodPoints ? 'border-t border-[#2C2C2E] pt-4' : ''}>
+                    <p className="mb-1 text-xs font-semibold text-orange-400">🔧 고칠 점</p>
+                    <p className="text-sm text-[#AEAEB2] whitespace-pre-wrap">{lesson.improvements}</p>
+                  </div>
+                )}
+                {lesson.coachComment && (
+                  <div className={(lesson.goodPoints || lesson.improvements) ? 'border-t border-[#2C2C2E] pt-4' : ''}>
+                    <p className="mb-1 text-xs font-semibold text-[#636366]">💬 코멘트</p>
+                    <p className="text-sm text-[#AEAEB2] whitespace-pre-wrap">{lesson.coachComment}</p>
+                  </div>
+                )}
+                {!lesson.goodPoints && !lesson.improvements && !lesson.coachComment && (
+                  <p className="text-sm text-[#636366]">작성된 피드백이 없습니다.</p>
+                )}
+              </div>
             </Card>
           </>
         )}
 
+        {/* 수정 모드 */}
+        {editMode && (
+          <>
+            {/* 집중 영역 편집 */}
+            <Card>
+              <h2 className="mb-1 font-semibold text-white">이번 레슨 집중 영역</h2>
+              <p className="mb-3 text-xs text-[#636366]">이번 레슨에서 집중한 영역을 선택하세요</p>
+              <div className="mb-3 flex flex-wrap gap-2">
+                {PRESET_AREAS.map(area => {
+                  const selected = focusAreas.some(f => f.area === area);
+                  return (
+                    <button
+                      key={area}
+                      onClick={() => toggleArea(area)}
+                      className={`rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
+                        selected ? 'bg-[#D4AF37] text-black' : 'border border-[#2C2C2E] bg-[#252525] text-[#AEAEB2]'
+                      }`}
+                    >
+                      {area}
+                    </button>
+                  );
+                })}
+              </div>
+              {focusAreas.length > 0 && (
+                <div className="space-y-2">
+                  {focusAreas.map(f => (
+                    <div key={f.area} className="flex items-center gap-2">
+                      <span className="w-16 shrink-0 text-sm font-semibold text-[#D4AF37]">{f.area}</span>
+                      <input
+                        type="text"
+                        value={f.note}
+                        onChange={e => updateNote(f.area, e.target.value)}
+                        placeholder="코멘트 (선택)"
+                        className="flex-1 rounded-xl border border-[#2C2C2E] bg-[#252525] px-3 py-1.5 text-sm text-white outline-none placeholder:text-[#4A4A4A] focus:border-[#D4AF37]"
+                      />
+                      <button onClick={() => toggleArea(f.area)} className="shrink-0 text-[#636366] hover:text-red-400">✕</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Card>
+
+            {/* 피드백 편집 */}
+            <Card>
+              <div className="space-y-4">
+                <div>
+                  <p className="mb-1.5 text-xs font-semibold text-[#D4AF37]">✅ 잘된 점</p>
+                  <Textarea rows={3} value={goodPoints} onChange={e => setGoodPoints(e.target.value)} placeholder="이번 레슨에서 잘한 점..." />
+                </div>
+                <div>
+                  <p className="mb-1.5 text-xs font-semibold text-orange-400">🔧 고칠 점</p>
+                  <Textarea rows={3} value={improvements} onChange={e => setImprovements(e.target.value)} placeholder="개선이 필요한 점..." />
+                </div>
+                <div>
+                  <p className="mb-1.5 text-xs font-semibold text-[#636366]">💬 코멘트</p>
+                  <Textarea rows={3} value={coachComment} onChange={e => setCoachComment(e.target.value)} placeholder="추가 코치 코멘트..." />
+                </div>
+              </div>
+            </Card>
+          </>
+        )}
+
+        {/* 미션 */}
         <Card>
           <div className="mb-3 flex items-center justify-between">
             <h2 className="font-semibold text-white">이번 주 연습 방향</h2>
@@ -233,7 +283,7 @@ export default function LessonDetail() {
               <p className="text-sm text-[#636366]">등록된 연습 방향이 없습니다.</p>
             ) : (
               <div className="space-y-2">
-                {missions.map((m) => (
+                {missions.map(m => (
                   <div key={m.id} className="flex items-start gap-3">
                     <span className={`mt-0.5 text-lg shrink-0 ${m.isCompleted ? 'opacity-50' : ''}`}>
                       {m.isCompleted ? '✅' : '🎯'}
@@ -258,7 +308,7 @@ export default function LessonDetail() {
                       value={m.text}
                       onChange={e => updateMission(i, e.target.value)}
                       placeholder={`미션 ${i + 1}`}
-                      className="flex-1 rounded-xl border border-[#2C2C2E] bg-[#252525] text-white px-3 py-2 text-sm outline-none placeholder:text-[#636366] focus:border-[#D4AF37] focus:bg-[#2A2A2A]"
+                      className="flex-1 rounded-xl border border-[#2C2C2E] bg-[#252525] px-3 py-2 text-sm text-white outline-none placeholder:text-[#636366] focus:border-[#D4AF37] focus:bg-[#2A2A2A]"
                     />
                     <button onClick={() => removeMission(i)} className="shrink-0 text-[#636366] hover:text-red-400 text-lg leading-none">✕</button>
                   </div>
@@ -267,7 +317,6 @@ export default function LessonDetail() {
                   <p className="text-sm text-[#636366]">+ 추가 버튼으로 미션을 등록하세요.</p>
                 )}
               </div>
-
               {missionEditMode && !editMode && (
                 <div className="mt-4 flex gap-2">
                   <Button size="sm" variant="secondary" onClick={cancelMissionEdit} className="flex-1">취소</Button>

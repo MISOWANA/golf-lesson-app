@@ -6,6 +6,8 @@ import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Textarea } from '@/components/ui/Input';
 
+interface FocusArea { area: string; note: string; }
+
 interface Lesson {
   _id: string;
   sessionNumber: number;
@@ -14,6 +16,7 @@ interface Lesson {
   goodPoints: string;
   improvements: string;
   coachComment: string;
+  focusAreas: FocusArea[];
   missions: { id: string; text: string; isCompleted: boolean }[];
   memberNote: string;
   coachId: { name: string };
@@ -88,6 +91,20 @@ export default function MemberLessonDetail() {
       </div>
 
       <div className="space-y-4">
+        {(lesson.focusAreas ?? []).length > 0 && (
+          <Card>
+            <h2 className="mb-3 font-semibold text-white">이번 레슨 집중 영역</h2>
+            <div className="flex flex-wrap gap-2">
+              {(lesson.focusAreas ?? []).map(f => (
+                <div key={f.area} className="rounded-xl bg-[#252525] px-3 py-2">
+                  <p className="text-sm font-semibold text-[#D4AF37]">{f.area}</p>
+                  {f.note && <p className="mt-0.5 text-xs text-[#AEAEB2]">{f.note}</p>}
+                </div>
+              ))}
+            </div>
+          </Card>
+        )}
+
         <Card>
           <div className="space-y-4">
             <div>

@@ -1,10 +1,8 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
-export interface IScores {
-  driver: number;
-  iron: number;
-  approach: number;
-  putting: number;
+export interface IFocusArea {
+  area: string;
+  note: string;
 }
 
 export interface IMission {
@@ -24,7 +22,7 @@ export interface ILessonSession extends Document {
   goodPoints: string;
   improvements: string;
   coachComment: string;
-  scores: IScores;
+  focusAreas: IFocusArea[];
   mediaUrls: string[];
   memberNote: string;
   missions: IMission[];
@@ -39,6 +37,11 @@ const MissionSchema = new Schema<IMission>({
   completedAt: Date,
 }, { _id: false });
 
+const FocusAreaSchema = new Schema<IFocusArea>({
+  area: String,
+  note: { type: String, default: '' },
+}, { _id: false });
+
 const LessonSessionSchema = new Schema<ILessonSession>({
   coachId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   memberId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
@@ -49,12 +52,7 @@ const LessonSessionSchema = new Schema<ILessonSession>({
   goodPoints: { type: String, default: '' },
   improvements: { type: String, default: '' },
   coachComment: { type: String, default: '' },
-  scores: {
-    driver: { type: Number, default: 7 },
-    iron: { type: Number, default: 7 },
-    approach: { type: Number, default: 7 },
-    putting: { type: Number, default: 7 },
-  },
+  focusAreas: { type: [FocusAreaSchema], default: [] },
   mediaUrls: [String],
   memberNote: { type: String, default: '' },
   missions: [MissionSchema],

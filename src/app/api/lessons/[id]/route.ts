@@ -47,12 +47,12 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   const body = await req.json();
 
   if (session.role === 'coach' && lesson.coachId.toString() === session.id) {
-    const { goodPoints, improvements, coachComment, scores, missions, location, lessonDate, isShared } = body;
+    const { goodPoints, improvements, coachComment, focusAreas, missions, location, lessonDate, isShared } = body;
 
     if (goodPoints !== undefined) lesson.goodPoints = goodPoints;
     if (improvements !== undefined) lesson.improvements = improvements;
     if (coachComment !== undefined) lesson.coachComment = coachComment;
-    if (scores !== undefined) lesson.scores = scores;
+    if (focusAreas !== undefined) lesson.focusAreas = focusAreas;
     if (missions !== undefined) lesson.missions = missions;
     if (location !== undefined) lesson.location = location;
     if (lessonDate !== undefined) lesson.lessonDate = new Date(lessonDate);
