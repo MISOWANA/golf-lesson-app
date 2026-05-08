@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Card } from '@/components/ui/Card';
+import { getCached, setCached } from '@/lib/clientCache';
 
 interface Mission { id: string; text: string; isCompleted: boolean; }
 
@@ -29,9 +30,11 @@ export default function PracticePage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const cached = getCached<Lesson[]>('/api/lessons');
+    if (cached) { setLessons(cached); setLoading(false); }
     fetch('/api/lessons')
       .then(r => r.json())
-      .then((data: Lesson[]) => { setLessons(data); })
+      .then((data: Lesson[]) => { setLessons(data); setCached('/api/lessons', data); })
       .finally(() => setLoading(false));
   }, []);
 
@@ -88,9 +91,9 @@ export default function PracticePage() {
                 style={{ width: totalCount ? `${(completedCount / totalCount) * 100}%` : '0%' }}
               />
             </div>
-            {totalCount > 0 && completedCount === totalCount && (
-              <p className="mt-2 text-center text-xs font-medium text-[#D4AF37]">🎉 모든 미션 완료! 훌륭해요</p>
-            )}
+            <p className={`mt-2 text-center text-xs font-medium text-[#D4AF37] transition-opacity ${
+              totalCount > 0 && completedCount === totalCount ? 'opacity-100' : 'opacity-0'
+            }`}>🎉 모든 미션 완료! 훌륭해요</p>
           </div>
 
           <div className="space-y-6">

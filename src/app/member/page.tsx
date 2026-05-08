@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { getCached, setCached } from '@/lib/clientCache';
 
 interface Lesson {
   _id: string;
@@ -33,11 +34,19 @@ export default function MemberHome() {
   const [userName, setUserName] = useState('');
 
   useEffect(() => {
-    fetch('/api/auth/me').then(r => r.json()).then(d => setUserName(d.name || ''));
-    fetch('/api/member/coach').then(r => r.json()).then(setCoach);
+    const cachedMe = getCached<{ name: string }>('/api/auth/me');
+    if (cachedMe) setUserName(cachedMe.name || '');
+    fetch('/api/auth/me').then(r => r.json()).then(d => { setUserName(d.name || ''); setCached('/api/auth/me', d); });
+
+    const cachedCoach = getCached<{ name: string }>('/api/member/coach');
+    if (cachedCoach) setCoach(cachedCoach);
+    fetch('/api/member/coach').then(r => r.json()).then(d => { setCoach(d); setCached('/api/member/coach', d); });
+
+    const cachedLessons = getCached<Lesson[]>('/api/lessons');
+    if (cachedLessons) { setLessons(cachedLessons); setLoading(false); }
     fetch('/api/lessons')
       .then(r => r.json())
-      .then(setLessons)
+      .then(d => { setLessons(d); setCached('/api/lessons', d); })
       .finally(() => setLoading(false));
   }, []);
 

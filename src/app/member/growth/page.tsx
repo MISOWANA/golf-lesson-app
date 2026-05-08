@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { getCached, setCached } from '@/lib/clientCache';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   RadarChart, PolarGrid, PolarAngleAxis, Radar,
@@ -30,9 +31,11 @@ export default function GrowthPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const cached = getCached<Lesson[]>('/api/lessons');
+    if (cached) { setLessons([...cached].reverse()); setLoading(false); }
     fetch('/api/lessons')
       .then(r => r.json())
-      .then((data: Lesson[]) => setLessons([...data].reverse()))
+      .then((data: Lesson[]) => { setLessons([...data].reverse()); setCached('/api/lessons', data); })
       .finally(() => setLoading(false));
   }, []);
 
