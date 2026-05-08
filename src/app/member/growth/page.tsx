@@ -131,7 +131,7 @@ export default function GrowthPage() {
                     tickFormatter={v => `${v}%`}
                   />
                   <Tooltip
-                    formatter={(v: number) => [`${v}%`, '달성률']}
+                    formatter={(v) => [v != null ? `${v}%` : '-', '달성률']}
                     contentStyle={{ backgroundColor: '#1C1C1E', border: '1px solid #2C2C2E', borderRadius: '12px', color: '#fff' }}
                     labelStyle={{ color: '#AEAEB2' }}
                     itemStyle={{ color: '#fff' }}
