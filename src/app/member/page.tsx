@@ -14,13 +14,8 @@ interface Lesson {
   goodPoints: string;
   improvements: string;
   coachComment: string;
-  scores: { driver: number; iron: number; approach: number; putting: number };
   missions: { id: string; text: string; isCompleted: boolean }[];
   coachId: { name: string };
-}
-
-function avg(s: Lesson['scores']) {
-  return ((s.driver + s.iron + s.approach + s.putting) / 4).toFixed(1);
 }
 
 function fmtDate(d: string) {
@@ -131,25 +126,29 @@ export default function MemberHome() {
                       {l.location || '장소 미입력'} · 코치: {(l.coachId as any)?.name}
                     </p>
                   </div>
-                  <div className="text-right">
-                    <p className="text-xl font-bold text-[#D4AF37]">{avg(l.scores)}</p>
-                    <p className="text-xs text-[#636366]">종합</p>
-                  </div>
                 </div>
 
-                <div className="mt-3 grid grid-cols-4 gap-1 text-center">
-                  {[
-                    { label: '드라이버', val: l.scores.driver },
-                    { label: '아이언', val: l.scores.iron },
-                    { label: '어프로치', val: l.scores.approach },
-                    { label: '퍼팅', val: l.scores.putting },
-                  ].map(({ label, val }) => (
-                    <div key={label} className="rounded-lg bg-[#252525] py-1.5">
-                      <p className="text-xs font-bold text-[#D4AF37]">{val}</p>
-                      <p className="text-[10px] text-[#636366]">{label}</p>
+                {l.missions && l.missions.length > 0 && (() => {
+                  const done = l.missions.filter(m => m.isCompleted).length;
+                  const total = l.missions.length;
+                  const pct = Math.round((done / total) * 100);
+                  return (
+                    <div className="mt-3">
+                      <div className="mb-1 flex items-center justify-between">
+                        <span className="text-xs text-[#636366]">미션 달성</span>
+                        <span className={`text-xs font-semibold ${pct === 100 ? 'text-[#D4AF37]' : 'text-[#AEAEB2]'}`}>
+                          {pct === 100 ? '🏆 ' : ''}{done}/{total} 완료
+                        </span>
+                      </div>
+                      <div className="h-1.5 rounded-full bg-[#2C2C2E]">
+                        <div
+                          className="h-1.5 rounded-full bg-[#D4AF37] transition-all"
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
                     </div>
-                  ))}
-                </div>
+                  );
+                })()}
 
                 {l.goodPoints && (
                   <p className="mt-2 line-clamp-1 text-xs text-[#AEAEB2]">✅ {l.goodPoints}</p>

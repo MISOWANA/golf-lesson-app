@@ -14,7 +14,6 @@ interface Lesson {
   goodPoints: string;
   improvements: string;
   coachComment: string;
-  scores: { driver: number; iron: number; approach: number; putting: number };
   missions: { id: string; text: string; isCompleted: boolean }[];
   memberNote: string;
   coachId: { name: string };
@@ -30,7 +29,6 @@ export default function MemberLessonDetail() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const [lesson, setLesson] = useState<Lesson | null>(null);
-  const [tab, setTab] = useState<'good' | 'improve' | 'comment'>('good');
   const [memberNote, setMemberNote] = useState('');
   const [editNote, setEditNote] = useState(false);
   const [savingNote, setSavingNote] = useState(false);
@@ -71,12 +69,6 @@ export default function MemberLessonDetail() {
     </div>
   );
 
-  const tabs = [
-    { key: 'good', label: '✅ 잘된 점' },
-    { key: 'improve', label: '🔧 고칠 점' },
-    { key: 'comment', label: '💬 코멘트' },
-  ] as const;
-
   const completedCount = missions.filter(m => m.isCompleted).length;
 
   return (
@@ -97,40 +89,25 @@ export default function MemberLessonDetail() {
 
       <div className="space-y-4">
         <Card>
-          <h2 className="mb-2 text-sm font-semibold text-[#636366]">항목별 점수</h2>
-          <div className="grid grid-cols-4 gap-2 text-center">
-            {[
-              { label: '드라이버', val: lesson.scores.driver },
-              { label: '아이언', val: lesson.scores.iron },
-              { label: '어프로치', val: lesson.scores.approach },
-              { label: '퍼팅', val: lesson.scores.putting },
-            ].map(({ label, val }) => (
-              <div key={label} className="rounded-xl bg-[#252525] py-3">
-                <p className="text-xl font-bold text-[#D4AF37]">{val}</p>
-                <p className="text-[11px] text-[#636366]">{label}</p>
-              </div>
-            ))}
-          </div>
-        </Card>
-
-        <Card>
-          <div className="mb-4 flex gap-1 rounded-xl bg-[#2A2A2A] p-1">
-            {tabs.map(t => (
-              <button
-                key={t.key}
-                onClick={() => setTab(t.key)}
-                className={`flex-1 rounded-lg py-2 text-xs font-medium transition-colors ${
-                  tab === t.key ? 'bg-[#D4AF37] text-black' : 'text-[#636366]'
-                }`}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
-          <div className="rounded-xl bg-[#252525] p-3 text-sm text-[#AEAEB2] whitespace-pre-wrap min-h-[80px]">
-            {tab === 'good' && (lesson.goodPoints || <span className="text-[#636366]">내용 없음</span>)}
-            {tab === 'improve' && (lesson.improvements || <span className="text-[#636366]">내용 없음</span>)}
-            {tab === 'comment' && (lesson.coachComment || <span className="text-[#636366]">내용 없음</span>)}
+          <div className="space-y-4">
+            <div>
+              <p className="mb-1.5 text-xs font-semibold text-[#D4AF37]">✅ 잘된 점</p>
+              <p className="text-sm text-[#AEAEB2] whitespace-pre-wrap">
+                {lesson.goodPoints || <span className="text-[#636366]">내용 없음</span>}
+              </p>
+            </div>
+            <div className="border-t border-[#2C2C2E] pt-4">
+              <p className="mb-1.5 text-xs font-semibold text-[#D4AF37]">🔧 고칠 점</p>
+              <p className="text-sm text-[#AEAEB2] whitespace-pre-wrap">
+                {lesson.improvements || <span className="text-[#636366]">내용 없음</span>}
+              </p>
+            </div>
+            <div className="border-t border-[#2C2C2E] pt-4">
+              <p className="mb-1.5 text-xs font-semibold text-[#D4AF37]">💬 코멘트</p>
+              <p className="text-sm text-[#AEAEB2] whitespace-pre-wrap">
+                {lesson.coachComment || <span className="text-[#636366]">내용 없음</span>}
+              </p>
+            </div>
           </div>
         </Card>
 

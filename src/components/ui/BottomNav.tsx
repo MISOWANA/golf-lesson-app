@@ -61,10 +61,14 @@ function NavIcon({ href }: { href: string }) {
 export function BottomNav({ items }: BottomNavProps) {
   const pathname = usePathname();
 
+  const activeHref = items
+    .filter(item => pathname === item.href || pathname.startsWith(item.href + '/'))
+    .sort((a, b) => b.href.length - a.href.length)[0]?.href ?? '';
+
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 flex border-t border-[#2C2C2E] bg-[#1C1C1E] pb-safe">
       {items.map((item) => {
-        const active = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
+        const active = item.href === activeHref;
         return (
           <Link
             key={item.href}
